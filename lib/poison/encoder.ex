@@ -340,9 +340,20 @@ if Application.get_env(:poison, :enable_hashdict) do
 end
 
 if Version.match?(System.version, ">=1.3.0-rc.1") do
-  defimpl Poison.Encoder, for: [Date, Time, NaiveDateTime, DateTime] do
+  defimpl Poison.Encoder, for: [Date, Time] do
     def encode(value, options) do
       Poison.Encoder.BitString.encode(@for.to_iso8601(value), options)
+    end
+  end
+
+  defimpl Poison.Encoder, for: [NaiveDateTime, DateTime] do
+    def encode(value, options) do
+      dt = value
+      |> Timex.Timezone.convert("UTC")
+      |> Timex.format("{ISO:Extended}")
+      |> elem(1)
+
+      <<?", dt::binary, ?">>
     end
   end
 end
